@@ -17,7 +17,7 @@ desc: |
   - ops_umo: 运维播报目标 UMO 列表
 version: 1.0.0
 author: decimo
-repo: https://github.com/xiaochai-123/astrbot-plugin-ret2shell
+repo: https://github.com/xiaochai-123/astrbot_plugin_ret2shell
 astrbot_version: ">=4.17.0"
 support_platforms:
   - aiocqhttp
