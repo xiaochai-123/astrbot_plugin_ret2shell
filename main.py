@@ -17,7 +17,7 @@ import astrbot.api.message_components as Comp
     "astrbot_plugin_ret2shell",
     "decimo",
     "Ret2Shell 赛事事件推送插件",
-    "1.0.0",
+    "1.0.1",
     repo="https://github.com/xiaochai-123/astrbot_plugin_ret2shell"
 )
 class Ret2ShellPlugin(Star):
