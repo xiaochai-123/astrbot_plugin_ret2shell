@@ -284,13 +284,13 @@ class Ret2ShellPlugin(Star):
 
             if event_type == "correct":
                 if blood_state == 1:
-                    lines.append(f"🎉 恭喜 {team_name} 获得 [{tag_name}] {challenge_name} 一血！")
+                    lines.append(f"🎉 恭喜 {team_name} 获得 [{tag_name}] {challenge_name} 一血！🥇")
                     msg_type = "public"
                 elif blood_state == 2:
-                    lines.append(f"🎉 恭喜 {team_name} 获得 [{tag_name}] {challenge_name} 二血！")
+                    lines.append(f"🎉 恭喜 {team_name} 获得 [{tag_name}] {challenge_name} 二血！🥈")
                     msg_type = "public"
                 elif blood_state == 3:
-                    lines.append(f"🎉 恭喜 {team_name} 获得 [{tag_name}] {challenge_name} 三血！")
+                    lines.append(f"🎉 恭喜 {team_name} 获得 [{tag_name}] {challenge_name} 三血！🥉")
                     msg_type = "public"
                 else:
                     lines.append(f"✅ {team_name} 解出了 [{tag_name}] {challenge_name}")
@@ -300,7 +300,7 @@ class Ret2ShellPlugin(Star):
                 peer_team = event_data.get("peer_team", {})
                 peer_team_name = peer_team.get("name", "未知队伍")
                 lines = [f"⚠️ 【{game_name}】检测到作弊行为！！!⚠️"]
-                lines.append(f"🤥 {team_name} 抄袭了 {peer_team_name} 的 [{tag_name}] {challenge_name} 题目的 flag")
+                lines.append(f"🤥 {team_name} 提交了 {peer_team_name} 的 [{tag_name}] {challenge_name} 题目的 flag")
                 msg_type = "admin"
 
         elif event_kind == "game":
