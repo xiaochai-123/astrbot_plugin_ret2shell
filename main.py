@@ -17,7 +17,7 @@ import astrbot.api.message_components as Comp
     "astrbot_plugin_ret2shell",
     "decimo",
     "Ret2Shell 赛事事件推送插件",
-    "1.1.0",
+    "1.1.1",
     repo="https://github.com/xiaochai-123/astrbot_plugin_ret2shell"
 )
 class Ret2ShellPlugin(Star):
@@ -267,18 +267,11 @@ class Ret2ShellPlugin(Star):
             challenge_name = challenge.get("name", "未知")
 
             if event_type == "up":
-                lines.append(f"⬆️ 新题目上线！")
-                lines.append(f"🏷️ 方向: {tag_name}")
-                lines.append(f"📝 题目: {challenge_name}")
-                lines.append(f"👤 操作者: {operator.get('nickname', '未知')}")
+                lines.append(f"⬆️ [{tag_name}] 新题目上线：{challenge_name}")
             elif event_type == "down":
-                lines.append(f"⬇️ 题目下线")
-                lines.append(f"🏷️ 方向: {tag_name}")
-                lines.append(f"📝 题目: {challenge_name}")
+                lines.append(f"⬇️ [{tag_name}] 题目下线：{challenge_name}")
             elif event_type == "new_hint":
-                lines.append(f"💡 新提示发布！")
-                lines.append(f"🏷️ 方向: {tag_name}")
-                lines.append(f"📝 题目: {challenge_name}")
+                lines.append(f"💡 [{tag_name}] {challenge_name} 发布了新提示")
 
         elif event_kind == "submission":
             team = event_data.get("team", {})
@@ -291,44 +284,34 @@ class Ret2ShellPlugin(Star):
 
             if event_type == "correct":
                 if blood_state == 1:
-                    lines.append(f"🥇 一血！")
+                    lines.append(f"🎉 恭喜 {team_name} 获得 [{tag_name}] {challenge_name} 一血！")
                     msg_type = "public"
                 elif blood_state == 2:
-                    lines.append(f"🥈 二血！")
+                    lines.append(f"🎉 恭喜 {team_name} 获得 [{tag_name}] {challenge_name} 二血！")
                     msg_type = "public"
                 elif blood_state == 3:
-                    lines.append(f"🥉 三血！")
+                    lines.append(f"🎉 恭喜 {team_name} 获得 [{tag_name}] {challenge_name} 三血！")
                     msg_type = "public"
                 else:
-                    lines.append(f"✅ 解题成功")
+                    lines.append(f"✅ {team_name} 解出了 [{tag_name}] {challenge_name}")
                     msg_type = "admin"
-                lines.append(f"👥 队伍: {team_name}")
-                lines.append(f"🏷️ 方向: {tag_name}")
-                lines.append(f"📝 题目: {challenge_name}")
 
             elif event_type == "cheated":
                 peer_team = event_data.get("peer_team", {})
                 peer_team_name = peer_team.get("name", "未知队伍")
-                lines.append(f"🤥 检测到作弊行为！")
-                lines.append(f"🚫 抄袭者: {team_name}")
-                lines.append(f"🎯 被抄袭: {peer_team_name}")
-                lines.append(f"🏷️ 方向: {tag_name}")
-                lines.append(f"📝 题目: {challenge_name}")
+                lines.append(f"🤥 {team_name} 抄袭了 {peer_team_name} 的 [{tag_name}] {challenge_name} flag")
                 msg_type = "admin"
 
             elif event_type == "too_quick":
                 operator = event_data.get("operator", {})
-                lines.append(f"💥 提交频率过快！")
-                lines.append(f"👤 选手: {operator.get('nickname', '未知')}")
-                lines.append(f"🏷️ 方向: {tag_name}")
-                lines.append(f"📝 题目: {challenge_name}")
+                operator_name = operator.get("nickname", "未知选手")
+                lines.append(f"💥 {operator_name} 在 [{tag_name}] {challenge_name} 上刷 flag 太快了")
                 msg_type = "admin"
 
         elif event_kind == "game":
             event_type = event_data.get("event_type", "unknown")
             if event_type == "new_notification":
-                lines.append(f"📢 新通知发布！")
-                lines.append(f"📝 {event_data.get('message', '')}")
+                lines.append(f"📢 新通知：{event_data.get('message', '')}")
             elif event_type == "freeze":
                 lines.append(f"🧊 比赛已冻结")
             elif event_type == "unfreeze":
@@ -341,11 +324,8 @@ class Ret2ShellPlugin(Star):
             tag_name = challenge.get("tag", [{}])[0].get("name", "未知")
             challenge_name = challenge.get("name", "未知")
             team_name = team.get("name", "未知")
-            lines.append(f"✉️ 锤子反馈")
-            lines.append(f"👥 队伍: {team_name}")
-            lines.append(f"🏷️ 方向: {tag_name}")
-            lines.append(f"📝 题目: {challenge_name}")
-            lines.append(f"📝 内容: {content[:200]}")
+            lines.append(f"✉️ {team_name} 对 [{tag_name}] {challenge_name} 发送了反馈：")
+            lines.append(f"{content[:200]}")
 
         elif event_kind == "devops":
             event_type = event_data.get("event_type", "unknown")
