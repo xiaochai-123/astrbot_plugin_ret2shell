@@ -1,14 +1,77 @@
-# astrbot-plugin-helloworld
+## AstrBot Ret2Shell 赛事播报插件
 
-AstrBot 插件模板 / A template plugin for AstrBot plugin feature
+对接 Ret 2 Shell (回归终端) 赛事事件推送 WebSocket API，实现**赛事事件实时播报**和**信息查询**功能。
 
-> [!NOTE]
-> This repo is just a template of [AstrBot](https://github.com/AstrBotDevs/AstrBot) Plugin.
-> 
-> [AstrBot](https://github.com/AstrBotDevs/AstrBot) is an agentic assistant for both personal and group conversations. It can be deployed across dozens of mainstream instant messaging platforms, including QQ, Telegram, Feishu, DingTalk, Slack, LINE, Discord, Matrix, etc. In addition, it provides a reliable and extensible conversational AI infrastructure for individuals, developers, and teams. Whether you need a personal AI companion, an intelligent customer support agent, an automation assistant, or an enterprise knowledge base, AstrBot enables you to quickly build AI applications directly within your existing messaging workflows.
+## ✨ 功能特性
 
-# Supports
+- 🎯 **实时赛事播报**：自动推送题目上/下线、一/二/三血、新通知、作弊预警等事件
+- 📊 **查询赛事信息**：查看当前赛事名称、简介、起止时间 (`/game`)
+- 🏆 **查询积分排行**：查看总榜前十或指定方向榜 (`/rank [标签]`)
+- 🚩 **查询题目详情**：查看题目分数、方向、解出数 (`/challenge 题目ID`)
+- 👥 **查询队伍详情**：查看队伍分数、排名 (`/team 队伍ID`)
+- ⏰ **比赛定时播报**：比赛开始/结束时自动推送带赛事名称的通知
+- 🔔 **三级播报分类**：公开/管理/运维事件分别推送到不同目标
+- 🔌 **自动重连机制**：WebSocket 断开后自动重连，保障服务稳定性
+- ⚙️ **AstrBot WebUI 配置**：所有配置项均可在 AstrBot 管理后台中直接修改
 
-- [AstrBot Repo](https://github.com/AstrBotDevs/AstrBot)
-- [AstrBot Plugin Development Docs (Chinese)](https://docs.astrbot.app/dev/star/plugin-new.html)
-- [AstrBot Plugin Development Docs (English)](https://docs.astrbot.app/en/dev/star/plugin-new.html)
+## ⚙️ 配置说明
+
+本插件支持 **AstrBot WebUI 可视化配置**，安装后在插件管理页面点击「配置」即可填写。
+
+| 配置项               | 必填 | 说明                                         |
+| :------------------- | :--- | :------------------------------------------- |
+| `ret2shell_ws_link`  | ✅ 是 | Ret2Shell 平台提供的 WebSocket 连接地址      |
+| `ret2shell_account`  | ❌ 否 | 赛事管理员账号（用于获取提示详情等敏感信息） |
+| `ret2shell_password` | ❌ 否 | 赛事管理员密码                               |
+| `public_umo`         | ❌ 否 | 公开播报目标 UMO 列表                        |
+| `admin_umo`          | ❌ 否 | 管理播报目标 UMO 列表                        |
+| `ops_umo`            | ❌ 否 | 运维播报目标 UMO 列表                        |
+
+### 事件分类说明
+
+| 播报级别 | 包含事件                                                     | 配置项       |
+| :------- | :----------------------------------------------------------- | :----------- |
+| **公开** | 题目上/下线、一/二/三血、新通知、比赛冻结/解冻、比赛开始/结束 | `public_umo` |
+| **管理** | 普通解题、作弊检测、过快提交                                 | `admin_umo`  |
+| **运维** | 集群超载、服务崩溃                                           | `ops_umo`    |
+
+## 🎮 使用命令
+
+在 QQ 群内向机器人发送以下指令（需加 `/` 前缀）：
+
+| 命令                | 说明               | 示例                |
+| :------------------ | :----------------- | :------------------ |
+| `/game`             | 查询当前赛事信息   | `/game`             |
+| `/rank`             | 查询总积分榜前十   | `/rank`             |
+| `/rank [标签]`      | 查询指定方向榜前十 | `/rank web`         |
+| `/challenge [ID]`   | 查询指定题目详情   | `/challenge 1001`   |
+| `/team [ID]`        | 查询指定队伍详情   | `/team 505`         |
+| `/ret2shell_status` | 查看插件运行状态   | `/ret2shell_status` |
+
+## 📨 推送事件类型
+
+插件会自动解析 WebSocket 事件并推送以下消息：
+
+| 事件类型   | 说明                                   | 推送级别 |
+| :--------- | :------------------------------------- | :------- |
+| ⬆️ 题目上线 | 新题目发布                             | 公开     |
+| ⬇️ 题目下线 | 题目被管理员下线                       | 公开     |
+| 💡 提示更新 | 题目新增提示                           | 公开     |
+| 🥇 一血     | 第一个队伍解出题目                     | 公开     |
+| 🥈 二血     | 第二个队伍解出题目                     | 公开     |
+| 🥉 三血     | 第三个队伍解出题目                     | 公开     |
+| ✅ 解题     | 队伍解出题目（非前三）                 | 管理     |
+| 🤥 作弊     | 检测到作弊行为（显示抄袭者与被抄袭者） | 管理     |
+| 💥 过快提交 | 选手提交频率异常                       | 管理     |
+| 📢 新通知   | 比赛公告更新                           | 公开     |
+| 🧊 比赛冻结 | 比赛进入冻结期                         | 公开     |
+| 🌊 比赛解冻 | 比赛解冻                               | 公开     |
+| ⚠️ 集群超载 | 服务器负载过高                         | 运维     |
+| 🔥 服务崩溃 | 服务器异常                             | 运维     |
+| 🏁 比赛开始 | 自动推送，带比赛名称                   | 公开     |
+| 🎉 比赛结束 | 自动推送，带比赛名称                   | 公开     |
+
+## 🔧 依赖项
+
+- `websockets >= 12.0`
+- `httpx >= 0.24.0`
