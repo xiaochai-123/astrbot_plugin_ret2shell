@@ -188,6 +188,7 @@ class Ret2ShellPlugin(Star):
     async def _handle_message(self, raw_message: str):
         try:
             data = json.loads(raw_message)
+            logger.info(f"📨 收到原始消息: {raw_message}") 
             event_kind = next(iter(data.keys())) if data else "unknown"
             event_data = data.get(event_kind, {})
 
