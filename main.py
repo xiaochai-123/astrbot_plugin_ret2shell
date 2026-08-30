@@ -226,7 +226,14 @@ class Ret2ShellPlugin(Star):
     def _get_event_type(self, event_kind: str, event_data: dict) -> str:
         """提取事件类型标识符，用于开关判断"""
         if event_kind == "challenge":
-            return event_data.get("event_type", "unknown")
+            event_type = event_data.get("event_type", "unknown")
+            if event_type == "up":
+                return "challenge_up"
+            elif event_type == "down":
+                return "challenge_down"
+            elif event_type == "new_hint":
+                return "new_hint"
+            return event_type
         elif event_kind == "submission":
             event_type = event_data.get("event_type", "unknown")
             if event_type == "correct":
