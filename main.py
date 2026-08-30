@@ -17,7 +17,7 @@ import astrbot.api.message_components as Comp
     "astrbot_plugin_ret2shell",
     "decimo",
     "Ret2Shell 赛事事件推送插件",
-    "1.0.1",
+    "1.1.0",
     repo="https://github.com/xiaochai-123/astrbot_plugin_ret2shell"
 )
 class Ret2ShellPlugin(Star):
@@ -29,6 +29,18 @@ class Ret2ShellPlugin(Star):
         self.public_umo = self._normalize_list(self.config.get("public_umo", []))
         self.admin_umo = self._normalize_list(self.config.get("admin_umo", []))
         self.ops_umo = self._normalize_list(self.config.get("ops_umo", []))
+
+        # 读取事件开关配置，默认全部开启
+        default_events = [
+            "challenge_up", "challenge_down", "new_hint",
+            "blood_1", "blood_2", "blood_3",
+            "correct", "cheated", "too_quick",
+            "new_notification", "freeze", "unfreeze",
+            "cluster_overloaded", "cluster_recovered", "server_panic"
+        ]
+        self.enabled_events = self.config.get("enabled_events", default_events)
+        if not self.enabled_events:
+            self.enabled_events = default_events
 
         self.client = None
         self.api_base_url = ""
@@ -43,6 +55,7 @@ class Ret2ShellPlugin(Star):
         logger.info(f"📢 public_umo: {self.public_umo}")
         logger.info(f"🔔 admin_umo: {self.admin_umo}")
         logger.info(f"🔧 ops_umo: {self.ops_umo}")
+        logger.info(f"🔘 已开启事件: {len(self.enabled_events)} 项")
 
     def _normalize_list(self, value) -> List[str]:
         if isinstance(value, str):
@@ -61,8 +74,7 @@ class Ret2ShellPlugin(Star):
             return
 
         await self._init_http_api()
-        
-        # 获取赛事时间并安排定时播报
+
         await self._schedule_game_timers()
 
         self.running = True
@@ -112,7 +124,6 @@ class Ret2ShellPlugin(Star):
                 if start_at:
                     self._game_start_time = datetime.fromtimestamp(start_at)
                     logger.info(f"📅 比赛开始时间: {self._game_start_time}")
-                    # 延迟到比赛开始时执行
                     delay = start_at - time.time()
                     if delay > 0:
                         asyncio.create_task(self._delayed_game_start(delay))
@@ -134,21 +145,18 @@ class Ret2ShellPlugin(Star):
         except Exception:
             pass
         return "Ret2Shell 赛事"
-    
+
     async def _delayed_game_start(self, delay: float):
-        """延迟执行比赛开始播报"""
         await asyncio.sleep(delay)
         game_name = await self._get_game_name()
         await self._broadcast_message(f"🏁 【{game_name}】比赛已开始！")
 
     async def _delayed_game_end(self, delay: float):
-        """延迟执行比赛结束播报"""
         await asyncio.sleep(delay)
         game_name = await self._get_game_name()
         await self._broadcast_message(f"🎉 【{game_name}】比赛已结束！")
 
     async def _broadcast_message(self, message: str):
-        """向所有公开 UMO 推送消息"""
         if not self.public_umo:
             return
         for umo in self.public_umo:
@@ -183,6 +191,12 @@ class Ret2ShellPlugin(Star):
             event_kind = next(iter(data.keys())) if data else "unknown"
             event_data = data.get(event_kind, {})
 
+            # 提取事件类型标识符，检查是否开启
+            event_type_key = self._get_event_type(event_kind, event_data)
+            if event_type_key not in self.enabled_events:
+                logger.debug(f"⏭️ 事件 {event_type_key} 已关闭，跳过推送")
+                return
+
             msg, msg_type = await self._format_event_message(event_kind, event_data)
 
             if msg_type == "public":
@@ -207,6 +221,28 @@ class Ret2ShellPlugin(Star):
             logger.warning(f"⚠️ 无法解析 JSON: {raw_message[:100]}")
         except Exception as e:
             logger.error(f"❌ 处理消息失败: {e}")
+
+    def _get_event_type(self, event_kind: str, event_data: dict) -> str:
+        """提取事件类型标识符，用于开关判断"""
+        if event_kind == "challenge":
+            return event_data.get("event_type", "unknown")
+        elif event_kind == "submission":
+            event_type = event_data.get("event_type", "unknown")
+            if event_type == "correct":
+                blood_state = event_data.get("blood_state")
+                if blood_state == 1:
+                    return "blood_1"
+                elif blood_state == 2:
+                    return "blood_2"
+                elif blood_state == 3:
+                    return "blood_3"
+                return "correct"
+            return event_type
+        elif event_kind == "game":
+            return event_data.get("event_type", "unknown")
+        elif event_kind == "devops":
+            return event_data.get("event_type", "unknown")
+        return "unknown"
 
     async def _format_event_message(self, event_kind: str, event_data: dict):
         """格式化事件消息，返回 (消息内容, 消息类型)"""
@@ -367,7 +403,7 @@ class Ret2ShellPlugin(Star):
             # 方向榜
             data = await self._http_get(f"/game/{self.game_id}/challenge/")
             logger.info(f"🔍 方向排行 API 返回: {data}")
-            
+
             if not data:
                 yield event.plain_result("❌ 获取方向排行失败")
                 return
@@ -471,8 +507,7 @@ class Ret2ShellPlugin(Star):
         name = data.get("name", "未知")
         tag_name = data.get("tag", [{}])[0].get("name", "未知") if data.get("tag") else "未知"
         score = data.get("score", 0)
-        
-        # 获取解题人数
+
         submit_data = await self._http_get(f"/game/{self.game_id}/challenge/{challenge_id}/submit")
         solves = submit_data.get("solves", 0) if submit_data else 0
 
@@ -528,6 +563,7 @@ class Ret2ShellPlugin(Star):
 - 运维目标: {self.ops_umo or '未配置'}
 - 比赛开始: {self._game_start_time.strftime('%Y-%m-%d %H:%M') if self._game_start_time else '未获取'}
 - 比赛结束: {self._game_end_time.strftime('%Y-%m-%d %H:%M') if self._game_end_time else '未获取'}
+- 已开启事件: {len(self.enabled_events)} 项
         """.strip()
         yield event.plain_result(status_msg)
 
