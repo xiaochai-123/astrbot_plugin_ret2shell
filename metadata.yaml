@@ -15,7 +15,7 @@ desc: |
   - public_umo: 公开播报目标 UMO 列表
   - admin_umo: 管理播报目标 UMO 列表
   - ops_umo: 运维播报目标 UMO 列表
-version: 1.1.1
+version: 1.1.2
 author: decimo
 repo: https://github.com/xiaochai-123/astrbot_plugin_ret2shell
 astrbot_version: ">=4.17.0"

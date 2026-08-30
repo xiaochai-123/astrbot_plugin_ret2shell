@@ -17,7 +17,7 @@ import astrbot.api.message_components as Comp
     "astrbot_plugin_ret2shell",
     "decimo",
     "Ret2Shell 赛事事件推送插件",
-    "1.1.1",
+    "1.1.2",
     repo="https://github.com/xiaochai-123/astrbot_plugin_ret2shell"
 )
 class Ret2ShellPlugin(Star):
@@ -188,7 +188,7 @@ class Ret2ShellPlugin(Star):
     async def _handle_message(self, raw_message: str):
         try:
             data = json.loads(raw_message)
-            logger.info(f"📨 收到原始消息: {raw_message}") 
+            #logger.info(f"📨 收到原始消息: {raw_message}") 
             event_kind = next(iter(data.keys())) if data else "unknown"
             event_data = data.get(event_kind, {})
 
